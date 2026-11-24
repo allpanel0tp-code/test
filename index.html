@@ -94,18 +94,28 @@ auth.signInAnonymously().then(u => { uid = u.user.uid; start(); }).catch(e => {
   $('#main').innerHTML = '<p class="empty">সংযোগ হয়নি: ' + esc(e.message) + '</p>';
 });
 
+async function loadChannels() {
+  try {
+    const u = await db.doc('users/' + uid).get({ source: 'server' });
+    joined = new Set((u.data() || {}).joined || []);
+    joined.forEach(watch);
+    const c = await db.collection('channels').orderBy('t', 'desc').limit(100).get({ source: 'server' });
+    chans = c.docs.map(d => ({ id: d.id, ...d.data() }));
+    ready = true;
+    render();
+  } catch (e) {
+    if (!cur && !ready) $('#main').innerHTML = '<p class="empty">সার্ভারে সংযোগ হয়নি (' + esc(e.code || '') + '): ' + esc(e.message) + '<br><br><button class="btn" onclick="loadChannels()">আবার চেষ্টা করুন</button></p>';
+  }
+}
+
 function start() {
   db.doc('users/' + uid).onSnapshot(s => {
     joined = new Set((s.data() || {}).joined || []);
     joined.forEach(watch);
     if (ready) render();
   }, showErr);
-  db.collection('channels').orderBy('t', 'desc').limit(100).onSnapshot({ includeMetadataChanges: true }, s => {
-    if (s.metadata.fromCache && s.empty) { if (!cur) $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>'; return; }
-    chans = s.docs.map(d => ({ id: d.id, ...d.data() }));
-    ready = true;
-    render();
-  }, showErr);
+  loadChannels();
+  setInterval(() => { if (!cur) loadChannels(); }, 15000);
   if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
 }
 
@@ -163,6 +173,7 @@ async function toggle(id) {
   const on = joined.has(id);
   await db.doc('users/' + uid).set({ joined: on ? FV.arrayRemove(id) : FV.arrayUnion(id) }, { merge: true });
   await db.doc('channels/' + id).update({ count: FV.increment(on ? -1 : 1) });
+  loadChannels();
 }
 
 function open(id) {
@@ -194,6 +205,7 @@ $('#make').onclick = async () => {
   await db.doc('users/' + uid).set({ joined: FV.arrayUnion(ref.id) }, { merge: true });
   $('#cname').value = ''; $('#cdesc').value = '';
   $('#dlg').close();
+  loadChannels();
 };
 
 function clearImg() { imgData = null; $('#prev').style.display = 'none'; $('#file').value = ''; }
