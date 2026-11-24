@@ -2,86 +2,143 @@
 <html lang="bn">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f3d3e">
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>চ্যানেল</title>
 <style>
-:root{--bg:#eef2f1;--card:#fff;--ink:#14292a;--mute:#5d7273;--head:#0f3d3e;--acc:#f2a900;--line:#d5dfde;color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1a1a;--card:#16282a;--ink:#e6efee;--mute:#8fa6a6;--head:#0a2a2b;--line:#27403f;color-scheme:dark}}
-*{box-sizing:border-box}
+:root{--bg:#e9efee;--card:#fff;--ink:#14292a;--mute:#6a8081;--head:#0f3d3e;--head2:#17605f;--acc:#f2a900;--line:#d9e3e2;--chip:#eef4f3;--me:#fff1cc;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1617;--card:#15282a;--ink:#e6efee;--mute:#8fa6a6;--head:#0a2a2b;--head2:#0f4040;--line:#27403f;--chip:#1d3436;--me:#4a3b10;color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
-body{font-family:"Hind Siliguri",system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
-header{background:var(--head);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
-header h1{font-size:1.15rem;margin:0;flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-header button{background:none;border:0;color:#fff;font:inherit;font-size:1.3rem;padding:4px 8px}
-main{flex:1;overflow-y:auto;padding:12px 12px 90px}
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{flex:1;padding:9px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600}
-.tabs button.on{background:var(--acc);border-color:var(--acc);color:#222}
-.ch{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:12px;margin-bottom:8px;border:1px solid var(--line)}
-.av{width:46px;height:46px;border-radius:50%;background:var(--head);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:1.2rem;flex:none}
+body{font-family:"Hind Siliguri",system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+header{background:linear-gradient(135deg,var(--head),var(--head2));color:#fff;padding:calc(env(safe-area-inset-top,0px) + 10px) 8px 10px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 12px rgba(0,0,0,.25);z-index:5}
+header button{background:none;border:0;color:#fff;font:inherit;font-size:1.35rem;padding:6px 10px;border-radius:50%}
+#hmid{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+#htitle{font-weight:700;font-size:1.1rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hsub{font-size:.78rem;opacity:.8;line-height:1.1}
+.av{border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#0f3d3e,#1d7a78);color:var(--acc);display:grid;place-items:center;font-weight:700;flex:none;border:2px solid rgba(242,169,0,.55)}
+main{flex:1;overflow-y:auto;padding:12px 12px 20px;background:radial-gradient(circle at 15% 10%,rgba(242,169,0,.07),transparent 40%),radial-gradient(circle at 90% 80%,rgba(23,96,95,.1),transparent 45%),var(--bg)}
+.tabs{display:flex;gap:8px;margin-bottom:12px;background:var(--card);padding:4px;border-radius:24px;border:1px solid var(--line)}
+.tabs button{flex:1;padding:8px;border-radius:20px;border:0;background:none;color:var(--mute);font:inherit;font-weight:600}
+.tabs button.on{background:var(--acc);color:#222}
+.ch{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:18px;padding:12px;margin-bottom:10px;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.05)}
 .ch .t{flex:1;min-width:0}
-.ch b{display:block}
+.ch b{display:block;font-size:1.02rem}
 .ch small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn{border:0;border-radius:18px;padding:7px 14px;font:inherit;font-weight:600;background:var(--acc);color:#222}
+.btn{border:0;border-radius:20px;padding:8px 16px;font:inherit;font-weight:600;background:var(--acc);color:#222}
 .btn.out{background:none;border:1px solid var(--line);color:var(--ink)}
-.post{background:var(--card);border-radius:4px 16px 16px 16px;padding:8px;margin-bottom:10px;max-width:92%;border:1px solid var(--line)}
-.post img{width:100%;border-radius:10px;display:block;margin-bottom:6px}
-.post p{margin:4px 6px;white-space:pre-wrap;word-break:break-word}
+.btn.red{background:#d64545;color:#fff}
+.btn.big{width:100%;padding:12px;font-size:1rem}
+.post{position:relative;background:var(--card);border-radius:6px 20px 20px 20px;padding:6px;margin:0 0 12px;max-width:94%;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.06);animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.post img{width:100%;border-radius:14px;display:block;margin-bottom:4px}
+.post p{margin:6px 8px;white-space:pre-wrap;word-break:break-word;line-height:1.5}
 .post a{color:#1a73e8;word-break:break-all}
 @media(prefers-color-scheme:dark){.post a{color:#7fb2ff}}
-.post time{display:block;text-align:right;font-size:.72rem;color:var(--mute);margin:2px 6px}
-.fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:#222;font-size:1.8rem;box-shadow:0 4px 14px rgba(0,0,0,.3)}
-.comp{background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);display:flex;gap:8px;align-items:flex-end}
-.comp textarea{flex:1;border:1px solid var(--line);border-radius:14px;padding:9px 12px;font:inherit;background:var(--bg);color:var(--ink);resize:none;max-height:120px}
+.more{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:50%;width:30px;height:30px;font-size:1.1rem}
+.meta{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 6px 2px}
+.meta span{font-size:.72rem;color:var(--mute);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:14px;padding:2px 9px;font:inherit;font-size:.85rem}
+.chip.me{background:var(--me);border-color:var(--acc)}
+.chip.add{color:var(--mute)}
+.picker{display:none;gap:4px;margin:6px;padding:4px 6px;background:var(--chip);border-radius:20px;width:max-content}
+.picker.on{display:flex}
+.picker button{background:none;border:0;font-size:1.5rem;padding:2px 5px}
+.fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);height:54px;padding:0 20px;border-radius:27px;border:0;background:var(--acc);color:#222;font:inherit;font-weight:700;font-size:1rem;box-shadow:0 6px 18px rgba(0,0,0,.3);display:none}
+#joinbar{display:none;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--card);border-top:1px solid var(--line)}
+.comp{background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);display:none;gap:8px;align-items:flex-end}
+.comp textarea{flex:1;border:1px solid var(--line);border-radius:18px;padding:9px 14px;font:inherit;background:var(--bg);color:var(--ink);resize:none;max-height:120px}
 .comp label{font-size:1.5rem;padding:4px 6px}
-#prev{display:none;padding:6px 10px;background:var(--card)}
+#prev{display:none;padding:6px 10px;background:var(--card);position:relative}
 #prev img{height:70px;border-radius:8px}
-dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,380px);background:var(--card);color:var(--ink)}
-dialog::backdrop{background:rgba(0,0,0,.5)}
-dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg);color:var(--ink)}
-.empty{text-align:center;color:var(--mute);margin-top:40px}
-#notifbar{background:var(--acc);color:#222;padding:8px 12px;display:none;justify-content:space-between;align-items:center;font-size:.9rem}
+dialog{border:0;border-radius:22px;padding:20px;width:min(92vw,400px);background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+dialog h3{margin:0 0 10px}
+dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:11px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--ink)}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.empty{text-align:center;color:var(--mute);margin-top:40px;line-height:1.7}
+.mute{color:var(--mute)}
+.ibig{display:flex;justify-content:center;margin-bottom:10px}
+.idesc{white-space:pre-wrap;word-break:break-word;line-height:1.6}
+#gate{position:fixed;inset:0;z-index:99;background:linear-gradient(160deg,#0a2a2b,#17605f);display:flex;align-items:center;justify-content:center;padding:24px}
+.gbox{text-align:center;color:#fff;max-width:340px}
+.gico{font-size:4rem;margin-bottom:6px}
+.gbox h2{margin:6px 0}
+.gbox p{opacity:.85;line-height:1.6}
+#lbimg{width:100%;border-radius:12px}
+.lblogo{width:96px;height:96px;margin:0 auto 10px;display:block}
 </style>
 </head>
 <body>
-<header><button id="back" style="display:none">←</button><h1 id="title">চ্যানেল</h1><button id="mine" style="display:none" title="চ্যানেল ছাড়ুন"></button></header>
-<div id="notifbar"><span>নতুন পোস্টের নোটিফিকেশন চান?</span><button class="btn" id="allow">চালু করুন</button></div>
-<main id="main"><p class="empty">লোড হচ্ছে… (সংস্করণ ১০)</p></main>
+<header>
+  <button id="back" style="display:none">←</button>
+  <div id="hmid"><div id="hav"></div><div style="min-width:0"><div id="htitle">চ্যানেল</div><div id="hsub" style="display:none"></div></div></div>
+  <button id="gear" title="অ্যাডমিন">⚙</button>
+</header>
+<main id="main"><p class="empty">লোড হচ্ছে…</p></main>
 <div id="prev"><img id="pimg" alt=""></div>
-<div class="comp" id="comp" style="display:none">
+<div id="joinbar"><button class="btn big" id="jbtn">জয়েন করুন</button></div>
+<div class="comp" id="comp">
   <label for="file">📷</label><input type="file" id="file" accept="image/*" hidden>
   <textarea id="txt" rows="1" placeholder="নতুন পোস্ট লিখুন…"></textarea>
   <button class="btn" id="send">পাঠান</button>
 </div>
-<button class="fab" id="fab">+</button>
+<button class="fab" id="fab">＋ নতুন চ্যানেল</button>
 
-<dialog id="dlg">
-  <b>নতুন চ্যানেল</b>
-  <input id="cname" placeholder="চ্যানেলের নাম" maxlength="40">
-  <textarea id="cdesc" rows="2" placeholder="বিবরণ (ঐচ্ছিক)" maxlength="120"></textarea>
-  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn out" id="cancel">বাতিল</button><button class="btn" id="make">তৈরি করুন</button></div>
+<div id="gate" style="display:none"><div class="gbox">
+  <div class="gico">🔔</div><h2>নোটিফিকেশন চালু করুন</h2>
+  <p>চ্যানেলের নতুন পোস্টের খবর পেতে নোটিফিকেশনের অনুমতি দিতে হবে। অনুমতি ছাড়া অ্যাপে ঢোকা যাবে না।</p>
+  <button class="btn big" id="gbtn">অনুমতি দিন</button>
+  <p id="gmsg"></p>
+</div></div>
+
+<dialog id="cdlg">
+  <h3 id="cdt">নতুন চ্যানেল</h3>
+  <div style="text-align:center"><div id="lgprev"></div><label class="btn out" for="lgfile" style="display:inline-block">🖼 লোগো বাছুন</label><input type="file" id="lgfile" accept="image/*" hidden></div>
+  <input id="cname" placeholder="চ্যানেলের নাম" maxlength="40" style="margin-top:12px">
+  <textarea id="cdesc" rows="3" placeholder="বিবরণ (ডেসক্রিপশন)" maxlength="300"></textarea>
+  <div class="row"><button class="btn out" id="ccancel">বাতিল</button><button class="btn" id="csave">সংরক্ষণ</button></div>
 </dialog>
 
+<dialog id="idlg"><div id="ibody"></div><div class="col" id="ibtn" style="margin-top:14px"></div></dialog>
+
+<dialog id="act"><div class="col"><button class="btn" id="aedit">✏️ এডিট করুন</button><button class="btn red" id="adel">🗑 ডিলেট করুন</button><button class="btn out" id="acancel">বাতিল</button></div></dialog>
+
+<dialog id="pdlg">
+  <h3>পোস্ট এডিট</h3>
+  <img id="eimg" alt="" style="width:100%;border-radius:12px;display:none">
+  <div class="row" style="margin:6px 0"><label class="btn out" for="efile">📷 ছবি বদলান</label><input type="file" id="efile" accept="image/*" hidden><button class="btn out" id="erm" style="display:none">ছবি সরান</button></div>
+  <textarea id="etxt" rows="5" placeholder="লেখা"></textarea>
+  <div class="row"><button class="btn out" id="ecancel">বাতিল</button><button class="btn" id="esave">সংরক্ষণ</button></div>
+</dialog>
+
+<dialog id="adlg"><div id="abody"></div></dialog>
+<dialog id="lb"><img id="lbimg" alt=""><div class="row" style="margin-top:10px"><button class="btn" id="lbclose">বন্ধ</button></div></dialog>
 <script>
 const KEY = "AIzaSyAWlFQaU4bddS-oe7GQMNJ2OIkyzG4EJa8", PROJ = "test09-85e48";
 const ROOT = 'projects/' + PROJ + '/databases/(default)/documents';
 const DB = 'https://firestore.googleapis.com/v1/' + ROOT;
+const EMO = ['👍', '❤️', '🔥', '😂', '👏'];
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
+const fmt = d => d ? d.toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-let uid, token, exp = 0, joined = [], tab = 'all', cur = null, chans = [], imgData = null, ready = false, postSig = null, postTimer = null;
+let uid, token, exp = 0, isAdmin = false, joined = [], rx = {}, tab = 'all', cur = null, chans = [], posts = [], ready = false, postSig = null, postTimer = null;
+let imgData = null, editPost = null, editCh = null, logoData = null, editImg = null, actPost = null, started = false;
 
+/* ---------- নেটওয়ার্ক ও লগইন ---------- */
 async function http(url, opt = {}, ms = 12000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
   try {
     const r = await fetch(url, { ...opt, signal: c.signal });
-    let j = await r.json().catch(() => ({}));
+    const j = await r.json().catch(() => ({}));
     const er = Array.isArray(j) ? (j[0] || {}) : j;
     if (!r.ok || er.error) { const e = new Error((er.error && er.error.message) || ('HTTP ' + r.status)); e.status = (er.error && er.error.code) || r.status; throw e; }
     return j;
@@ -90,36 +147,35 @@ async function http(url, opt = {}, ms = 12000) {
     throw e;
   } finally { clearTimeout(t); }
 }
-
-function setAuth(id, tok, ref, secs) { uid = id; token = tok; exp = Date.now() + (+secs - 60) * 1000; ls.set('auth', { uid: id, ref }); }
-
+function setAuth(id, tok, ref, secs) {
+  uid = id; token = tok; exp = Date.now() + (+secs - 60) * 1000;
+  try { const p = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); isAdmin = !!(p.firebase && p.firebase.sign_in_provider === 'password'); } catch (e) { isAdmin = false; }
+  ls.set('auth', { uid: id, ref });
+}
 async function refresh() {
   const a = ls.get('auth');
   if (a && a.ref) {
     try {
       const j = await http('https://securetoken.googleapis.com/v1/token?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(a.ref) });
-      setAuth(j.user_id, j.id_token, j.refresh_token, j.expires_in);
-      return;
+      setAuth(j.user_id, j.id_token, j.refresh_token, j.expires_in); return;
     } catch (e) {}
   }
   const j = await http('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
   setAuth(j.localId, j.idToken, j.refreshToken, j.expiresIn);
 }
-
 async function api(path, opt = {}) {
   if (!token || Date.now() > exp) await refresh();
-  const url = DB + path;
   const o = { ...opt, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
-  try { return await http(url, o); }
-  catch (e) { if (e.status === 401) { await refresh(); o.headers.Authorization = 'Bearer ' + token; return http(url, o); } throw e; }
+  try { return await http(DB + path, o); }
+  catch (e) { if (e.status === 401) { await refresh(); o.headers.Authorization = 'Bearer ' + token; return http(DB + path, o); } throw e; }
 }
-
 const S = v => ({ stringValue: String(v) });
+const I = v => ({ integerValue: String(v) });
 function parse(doc) {
   const o = { id: doc.name.split('/').pop() };
   for (const k in (doc.fields || {})) {
     const v = doc.fields[k];
-    o[k] = 'stringValue' in v ? v.stringValue : 'integerValue' in v ? +v.integerValue : 'timestampValue' in v ? new Date(v.timestampValue) : 'arrayValue' in v ? (v.arrayValue.values || []).map(x => x.stringValue) : null;
+    o[k] = 'stringValue' in v ? v.stringValue : 'integerValue' in v ? +v.integerValue : 'booleanValue' in v ? v.booleanValue : 'timestampValue' in v ? new Date(v.timestampValue) : 'arrayValue' in v ? (v.arrayValue.values || []).map(x => x.stringValue) : null;
   }
   return o;
 }
@@ -128,38 +184,44 @@ async function query(parent, q) {
   return r.filter(x => x.document).map(x => parse(x.document));
 }
 const byTime = (col, n) => ({ from: [{ collectionId: col }], orderBy: [{ field: { fieldPath: 't' }, direction: 'DESCENDING' }], limit: n });
+const commit = (path, tf) => api(':commit', { method: 'POST', body: JSON.stringify({ writes: [{ transform: { document: ROOT + path, fieldTransforms: tf } }] }) });
+const inc = (f, n) => ({ fieldPath: f, increment: I(n) });
+
+async function loadUser() {
+  try {
+    const u = parse(await api('/users/' + uid));
+    joined = u.joined || [];
+    rx = {}; (u.rx || []).forEach(x => { const i = x.lastIndexOf(':'); rx[x.slice(0, i)] = +x.slice(i + 1); });
+  } catch (e) { if (e.status !== 404) throw e; joined = []; rx = {}; }
+}
+const saveUser = () => api('/users/' + uid + '?updateMask.fieldPaths=joined&updateMask.fieldPaths=rx', { method: 'PATCH', body: JSON.stringify({ fields: { joined: { arrayValue: { values: joined.map(S) } }, rx: { arrayValue: { values: Object.entries(rx).map(([k, v]) => S(k + ':' + v)) } } } }) });
 
 function fail(e) {
   $('#main').innerHTML = '<p class="empty">সংযোগ হয়নি: ' + esc(e.message) + '<br><br><button class="btn" id="retry">আবার চেষ্টা করুন</button></p>';
   $('#retry').onclick = boot;
 }
 
-async function loadChannels() {
-  try {
-    try { joined = parse(await api('/users/' + uid)).joined || []; } catch (e) { if (e.status !== 404) throw e; joined = []; }
-    chans = await query('', byTime('channels', 100));
-    ready = true;
-    if (!cur) render();
-  } catch (e) { if (!ready) fail(e); }
+/* ---------- নোটিফিকেশন গেট ---------- */
+const canNotif = 'Notification' in window;
+function checkGate() {
+  if (canNotif && Notification.permission !== 'granted') {
+    $('#gate').style.display = 'flex';
+    if (Notification.permission === 'denied') $('#gmsg').textContent = 'অনুমতি বন্ধ করা আছে। Chrome-এ ঠিকানার বারের পাশে 🔒 চিহ্নে ট্যাপ করে Notifications চালু করুন, তারপর অ্যাপে ফিরে আসুন।';
+  } else enter();
 }
-
-async function boot() {
-  $('#main').innerHTML = '<p class="empty">লোড হচ্ছে… (সংস্করণ ১০)</p>';
-  try { await refresh(); } catch (e) { fail(e); return; }
-  loadChannels();
-}
-boot();
-setInterval(() => { if (!cur && ready) loadChannels(); }, 15000);
-setInterval(checkNew, 20000);
-if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
-$('#allow').onclick = async () => { await Notification.requestPermission(); $('#notifbar').style.display = 'none'; };
+function enter() { if (started) return; started = true; $('#gate').style.display = 'none'; boot(); }
+$('#gbtn').onclick = async () => {
+  const p = await Notification.requestPermission();
+  if (p === 'granted') enter();
+  else $('#gmsg').textContent = p === 'denied' ? 'অনুমতি বন্ধ করা আছে। Chrome-এ ঠিকানার বারের পাশে 🔒 চিহ্নে ট্যাপ করে Notifications চালু করুন, তারপর অ্যাপে ফিরে আসুন।' : 'অনুমতি না দিলে ঢোকা যাবে না।';
+};
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !started) checkGate(); });
 
 async function notify(title, body) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!canNotif || Notification.permission !== 'granted') return;
   const reg = await navigator.serviceWorker.ready;
-  reg.showNotification(title, { body, icon: 'launchericon-192x192.png' });
+  reg.showNotification(title, { body, icon: 'launchericon-192x192.png', badge: 'launchericon-96x96.png' });
 }
-
 async function checkNew() {
   if (!ready) return;
   const seen = ls.get('seen') || {};
@@ -177,121 +239,237 @@ async function checkNew() {
   ls.set('seen', seen);
 }
 
-function render() {
-  if (cur) return;
-  $('#title').textContent = 'চ্যানেল';
-  $('#back').style.display = 'none';
-  $('#mine').style.display = 'none';
-  $('#fab').style.display = 'block';
-  $('#comp').style.display = 'none';
-  const list = chans.filter(c => tab === 'all' || joined.includes(c.id));
-  $('#main').innerHTML =
-    '<div class="tabs"><button data-t="all" class="' + (tab === 'all' ? 'on' : '') + '">সব চ্যানেল</button>' +
-    '<button data-t="my" class="' + (tab === 'my' ? 'on' : '') + '">আমার চ্যানেল</button></div>' +
-    (list.length ? list.map(c =>
-      '<div class="ch" data-id="' + c.id + '"><div class="av">' + esc((c.name || '#')[0]) + '</div>' +
-      '<div class="t"><b>' + esc(c.name) + '</b><small>' + (c.count || 0) + ' সদস্য' + (c.desc ? ' – ' + esc(c.desc) : '') + '</small></div>' +
-      '<button class="btn ' + (joined.includes(c.id) ? 'out' : '') + '" data-j="' + c.id + '">' + (joined.includes(c.id) ? 'জয়েন করা' : 'জয়েন') + '</button></div>'
-    ).join('') : '<p class="empty">' + (tab === 'my' ? 'এখনো কোনো চ্যানেলে জয়েন করেননি।' : 'কোনো চ্যানেল নেই। + চেপে প্রথমটি বানান।') + '</p>');
-  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  document.querySelectorAll('.ch').forEach(el => el.onclick = e => {
-    if (e.target.dataset.j) { toggle(e.target.dataset.j); return; }
-    open(el.dataset.id);
+/* ---------- শুরু ---------- */
+async function loadChannels() {
+  try {
+    chans = await query('', byTime('channels', 100));
+    ready = true;
+    if (cur) { const c = chans.find(x => x.id === cur.id); if (c) { cur = c; head(); } }
+    else render();
+  } catch (e) { if (!ready) fail(e); }
+}
+async function boot() {
+  $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
+  try { await refresh(); await loadUser(); } catch (e) { fail(e); return; }
+  await loadChannels();
+}
+setInterval(() => { if (ready && !cur) loadChannels(); }, 15000);
+setInterval(checkNew, 20000);
+
+/* ---------- ছবি ---------- */
+function readImg(file, max, square, q) {
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => {
+      const c = document.createElement('canvas');
+      let sx = 0, sy = 0, sw = im.width, sh = im.height;
+      if (square) { const m = Math.min(sw, sh); sx = (sw - m) / 2; sy = (sh - m) / 2; sw = sh = m; c.width = c.height = max; }
+      else { const r = Math.min(1, max / Math.max(sw, sh)); c.width = sw * r; c.height = sh * r; }
+      c.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      res(c.toDataURL('image/jpeg', q));
+    };
+    im.onerror = rej; im.src = URL.createObjectURL(file);
   });
 }
+const av = (c, s) => c.logo
+  ? '<img class="av" style="width:' + s + 'px;height:' + s + 'px" src="' + c.logo + '" alt="">'
+  : '<div class="av" style="width:' + s + 'px;height:' + s + 'px;font-size:' + Math.round(s * .42) + 'px">' + esc((c.name || '#')[0]) + '</div>';
 
-async function saveJoined() {
-  await api('/users/' + uid + '?updateMask.fieldPaths=joined', { method: 'PATCH', body: JSON.stringify({ fields: { joined: { arrayValue: { values: joined.map(S) } } } }) });
+/* ---------- হেডার ও তালিকা ---------- */
+function head() {
+  $('#back').style.display = cur ? 'block' : 'none';
+  $('#hav').innerHTML = cur ? av(cur, 40) : '';
+  $('#htitle').textContent = cur ? cur.name : 'চ্যানেল';
+  const sub = cur ? (cur.count || 0) + ' সদস্য' : (isAdmin ? 'অ্যাডমিন মোড' : '');
+  $('#hsub').textContent = sub; $('#hsub').style.display = sub ? 'block' : 'none';
+  $('#fab').style.display = (!cur && isAdmin) ? 'block' : 'none';
+  $('#comp').style.display = (cur && isAdmin) ? 'flex' : 'none';
+  $('#joinbar').style.display = (cur && !isAdmin && !joined.includes(cur.id)) ? 'block' : 'none';
+}
+function render() {
+  if (cur) return;
+  head();
+  const list = chans.filter(c => tab === 'all' || joined.includes(c.id));
+  $('#main').innerHTML =
+    '<div class="tabs"><button data-t="all" class="' + (tab === 'all' ? 'on' : '') + '">সব চ্যানেল</button><button data-t="my" class="' + (tab === 'my' ? 'on' : '') + '">আমার চ্যানেল</button></div>' +
+    (list.length ? list.map(c =>
+      '<div class="ch" data-id="' + c.id + '">' + av(c, 52) +
+      '<div class="t"><b>' + esc(c.name) + '</b><small>' + (c.desc ? esc(c.desc) : 'কোনো বিবরণ নেই') + '</small><small>' + (c.count || 0) + ' সদস্য</small></div>' +
+      (isAdmin ? '' : '<button class="btn ' + (joined.includes(c.id) ? 'out' : '') + '" data-j="' + c.id + '">' + (joined.includes(c.id) ? 'জয়েন করা' : 'জয়েন') + '</button>') + '</div>'
+    ).join('') : '<p class="empty">' + (tab === 'my' ? 'এখনো কোনো চ্যানেলে জয়েন করেননি।' : (isAdmin ? 'কোনো চ্যানেল নেই। নিচের বাটনে প্রথমটি বানান।' : 'এখনো কোনো চ্যানেল নেই।')) + '</p>');
 }
 
 async function toggle(id) {
   const on = joined.includes(id);
-  try {
-    joined = on ? joined.filter(x => x !== id) : [...joined, id];
-    render();
-    await saveJoined();
-    await api(':commit', { method: 'POST', body: JSON.stringify({ writes: [{ transform: { document: ROOT + '/channels/' + id, fieldTransforms: [{ fieldPath: 'count', increment: { integerValue: on ? '-1' : '1' } }] } }] }) });
-    loadChannels();
-  } catch (e) { alert('হয়নি: ' + e.message); loadChannels(); }
+  joined = on ? joined.filter(x => x !== id) : [...joined, id];
+  const c = chans.find(x => x.id === id); if (c) c.count = Math.max(0, (c.count || 0) + (on ? -1 : 1));
+  cur ? head() : render();
+  try { await saveUser(); await commit('/channels/' + id, [inc('count', on ? -1 : 1)]); loadChannels(); }
+  catch (e) { alert('হয়নি: ' + e.message); await loadUser(); loadChannels(); }
 }
 
-function renderPosts(ps) {
-  $('#main').innerHTML = ps.length ? ps.map(p =>
-    '<div class="post">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') + (p.text ? '<p>' + linkify(p.text) + '</p>' : '') +
-    '<time>' + (p.t ? p.t.toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</time></div>').join('')
-    : '<p class="empty">এখনো কোনো পোস্ট নেই।</p>';
+/* ---------- চ্যানেল ও পোস্ট ---------- */
+function renderPosts() {
+  const m = $('#main'), atEnd = postSig === null || m.scrollHeight - m.scrollTop - m.clientHeight < 80, top = m.scrollTop;
+  m.innerHTML = posts.length ? posts.slice().reverse().map(p => {
+    const chips = EMO.map((e, i) => (p['r' + i] || 0) > 0 ? '<button class="chip ' + (rx[p.id] === i ? 'me' : '') + '" data-r="' + p.id + ':' + i + '">' + e + ' ' + p['r' + i] + '</button>' : '').join('');
+    return '<div class="post">' + (isAdmin ? '<button class="more" data-m="' + p.id + '">⋯</button>' : '') +
+      (p.img ? '<img src="' + p.img + '" data-lb="1" alt="">' : '') + (p.text ? '<p>' + linkify(p.text) + '</p>' : '') +
+      '<div class="meta"><div class="chips">' + chips + '<button class="chip add" data-p="' + p.id + '">☺＋</button></div><span>' + (p.e ? 'সম্পাদিত · ' : '') + fmt(p.t) + '</span></div>' +
+      '<div class="picker" id="pk-' + p.id + '">' + EMO.map((e, i) => '<button data-r="' + p.id + ':' + i + '">' + e + '</button>').join('') + '</div></div>';
+  }).join('') : '<p class="empty">এখনো কোনো পোস্ট নেই।</p>';
+  m.scrollTop = atEnd ? m.scrollHeight : top;
 }
-
-async function pollPosts() {
+async function pollPosts(force) {
   if (!cur) return;
   const id = cur.id;
   try {
     const ps = await query('/channels/' + id, byTime('posts', 60));
     if (!cur || cur.id !== id) return;
-    const sig = ps.map(p => p.id).join(',');
-    if (sig !== postSig) {
-      postSig = sig; renderPosts(ps);
+    const sig = ps.map(p => p.id + (p.e ? 'e' : '') + (p.text || '').length + [0, 1, 2, 3, 4].map(i => p['r' + i] || 0).join('')).join('|');
+    if (force || sig !== postSig) {
+      const first = postSig === null; posts = ps; renderPosts(); postSig = sig;
       const seen = ls.get('seen') || {}; seen[id] = ps[0] ? ps[0].id : ''; ls.set('seen', seen);
+      if (first) { const m = $('#main'); m.scrollTop = m.scrollHeight; }
     }
   } catch (e) { if (postSig === null) $('#main').innerHTML = '<p class="empty">পোস্ট লোড হয়নি: ' + esc(e.message) + '</p>'; }
 }
-
-function open(id) {
+function openCh(id) {
   cur = chans.find(c => c.id === id);
   if (!cur) return;
-  postSig = null;
-  $('#title').textContent = cur.name;
-  $('#back').style.display = 'block';
-  $('#fab').style.display = 'none';
-  $('#comp').style.display = cur.owner === uid ? 'flex' : 'none';
+  postSig = null; posts = [];
+  head();
   $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
   pollPosts();
   clearInterval(postTimer);
   postTimer = setInterval(pollPosts, 5000);
 }
+function closeCh() { clearInterval(postTimer); cur = null; imgData = null; $('#prev').style.display = 'none'; render(); }
 
-$('#back').onclick = () => { clearInterval(postTimer); cur = null; clearImg(); render(); };
-$('#fab').onclick = () => $('#dlg').showModal();
-$('#cancel').onclick = () => $('#dlg').close();
-$('#make').onclick = async () => {
-  const name = $('#cname').value.trim();
-  if (!name) return;
-  try {
-    const d = await api('/channels', { method: 'POST', body: JSON.stringify({ fields: { name: S(name), desc: S($('#cdesc').value.trim()), owner: S(uid), count: { integerValue: '1' }, t: { timestampValue: new Date().toISOString() } } }) });
-    joined = [...joined, d.name.split('/').pop()];
-    await saveJoined();
-    $('#cname').value = ''; $('#cdesc').value = '';
-    $('#dlg').close();
-    loadChannels();
-  } catch (e) { alert('চ্যানেল হয়নি: ' + e.message); }
+async function react(pid, i) {
+  const p = posts.find(x => x.id === pid); if (!p) return;
+  const old = rx[pid], tf = [], g = k => p['r' + k] || 0;
+  if (old === i) { delete rx[pid]; p['r' + i] = Math.max(0, g(i) - 1); tf.push(inc('r' + i, -1)); }
+  else {
+    if (old !== undefined) { p['r' + old] = Math.max(0, g(old) - 1); tf.push(inc('r' + old, -1)); }
+    rx[pid] = i; p['r' + i] = g(i) + 1; tf.push(inc('r' + i, 1));
+  }
+  renderPosts();
+  try { await commit('/channels/' + cur.id + '/posts/' + pid, tf); await saveUser(); }
+  catch (e) { alert('রিয়েক্ট হয়নি: ' + e.message); await loadUser(); pollPosts(true); }
+}
+
+/* ---------- ক্লিক হ্যান্ডলার ---------- */
+$('#main').onclick = e => {
+  const t = e.target;
+  const d = t.closest('[data-t]'); if (d && !cur) { tab = d.dataset.t; render(); return; }
+  const j = t.closest('[data-j]'); if (j) { toggle(j.dataset.j); return; }
+  const c = t.closest('.ch'); if (c) { openCh(c.dataset.id); return; }
+  const r = t.closest('[data-r]'); if (r) { const [pid, i] = r.dataset.r.split(':'); react(pid, +i); return; }
+  const a = t.closest('[data-p]'); if (a) { const pk = $('#pk-' + a.dataset.p); if (pk) pk.classList.toggle('on'); return; }
+  const m = t.closest('[data-m]'); if (m) { actPost = posts.find(x => x.id === m.dataset.m); $('#act').showModal(); return; }
+  const l = t.closest('[data-lb]'); if (l) { $('#lbimg').src = l.src; $('#lb').showModal(); }
 };
+$('#back').onclick = closeCh;
+$('#lbclose').onclick = () => $('#lb').close();
+$('#jbtn').onclick = () => cur && toggle(cur.id);
+$('#hmid').onclick = () => { if (cur) showInfo(); };
 
-function clearImg() { imgData = null; $('#prev').style.display = 'none'; $('#file').value = ''; }
-$('#file').onchange = e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const im = new Image();
-  im.onload = () => {
-    const r = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas');
-    c.width = im.width * r; c.height = im.height * r;
-    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-    imgData = c.toDataURL('image/jpeg', 0.7);
-    $('#pimg').src = imgData; $('#prev').style.display = 'block';
+function showInfo() {
+  const c = cur, on = joined.includes(c.id);
+  $('#ibody').innerHTML = '<div class="ibig">' + av(c, 96) + '</div><h3 style="text-align:center;margin:0">' + esc(c.name) + '</h3><div class="mute" style="text-align:center">' + (c.count || 0) + ' সদস্য</div><p class="idesc">' + (c.desc ? linkify(c.desc) : '<span class="mute">কোনো বিবরণ নেই</span>') + '</p>';
+  $('#ibtn').innerHTML = (isAdmin ? '<button class="btn" id="ied">✏️ চ্যানেল এডিট</button><button class="btn red" id="idel">🗑 চ্যানেল ডিলেট</button>' : '<button class="btn ' + (on ? 'out' : '') + '" id="ijoin">' + (on ? 'চ্যানেল ছাড়ুন' : 'জয়েন করুন') + '</button>') + '<button class="btn out" id="iclose">বন্ধ</button>';
+  $('#iclose').onclick = () => $('#idlg').close();
+  if ($('#ijoin')) $('#ijoin').onclick = () => { $('#idlg').close(); toggle(c.id); };
+  if ($('#ied')) $('#ied').onclick = () => { $('#idlg').close(); openChDlg(c); };
+  if ($('#idel')) $('#idel').onclick = async () => {
+    if (!confirm('এই চ্যানেল ডিলেট করবেন?')) return;
+    try { await api('/channels/' + c.id, { method: 'DELETE' }); $('#idlg').close(); closeCh(); loadChannels(); } catch (e) { alert('হয়নি: ' + e.message); }
   };
-  im.src = URL.createObjectURL(f);
+  $('#idlg').showModal();
+}
+
+/* ---------- অ্যাডমিন: চ্যানেল তৈরি/এডিট ---------- */
+function openChDlg(c) {
+  editCh = c || null; logoData = c ? (c.logo || null) : null;
+  $('#cdt').textContent = c ? 'চ্যানেল এডিট' : 'নতুন চ্যানেল';
+  $('#cname').value = c ? c.name : ''; $('#cdesc').value = c ? (c.desc || '') : '';
+  $('#lgprev').innerHTML = logoData ? '<img class="av lblogo" src="' + logoData + '" alt="">' : '<div class="av lblogo" style="font-size:2.4rem">＋</div>';
+  $('#cdlg').showModal();
+}
+$('#fab').onclick = () => openChDlg(null);
+$('#ccancel').onclick = () => $('#cdlg').close();
+$('#lgfile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  logoData = await readImg(f, 256, true, 0.8);
+  $('#lgprev').innerHTML = '<img class="av lblogo" src="' + logoData + '" alt="">';
+};
+$('#csave').onclick = async () => {
+  const name = $('#cname').value.trim(); if (!name) return;
+  const desc = $('#cdesc').value.trim();
+  try {
+    if (editCh) {
+      await api('/channels/' + editCh.id + '?updateMask.fieldPaths=name&updateMask.fieldPaths=desc&updateMask.fieldPaths=logo', { method: 'PATCH', body: JSON.stringify({ fields: { name: S(name), desc: S(desc), logo: S(logoData || '') } }) });
+    } else {
+      await api('/channels', { method: 'POST', body: JSON.stringify({ fields: { name: S(name), desc: S(desc), logo: S(logoData || ''), count: I(0), t: { timestampValue: new Date().toISOString() } } }) });
+    }
+    $('#cdlg').close(); loadChannels();
+  } catch (e) { alert('হয়নি: ' + e.message); }
 };
 
+/* ---------- অ্যাডমিন: পোস্ট ---------- */
+$('#file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  imgData = await readImg(f, 900, false, 0.7);
+  $('#pimg').src = imgData; $('#prev').style.display = 'block';
+};
 $('#send').onclick = async () => {
   const text = $('#txt').value.trim();
   if (!text && !imgData) return;
   $('#send').disabled = true;
   try {
-    await api('/channels/' + cur.id + '/posts', { method: 'POST', body: JSON.stringify({ fields: { text: S(text), img: S(imgData || ''), by: S(uid), t: { timestampValue: new Date().toISOString() } } }) });
-    $('#txt').value = ''; clearImg();
-    pollPosts();
+    await api('/channels/' + cur.id + '/posts', { method: 'POST', body: JSON.stringify({ fields: { text: S(text), img: S(imgData || ''), by: S(uid), e: { booleanValue: false }, t: { timestampValue: new Date().toISOString() }, r0: I(0), r1: I(0), r2: I(0), r3: I(0), r4: I(0) } }) });
+    $('#txt').value = ''; imgData = null; $('#file').value = ''; $('#prev').style.display = 'none';
+    pollPosts(true);
   } catch (e) { alert('পোস্ট হয়নি: ' + e.message); }
   $('#send').disabled = false;
 };
+$('#acancel').onclick = () => $('#act').close();
+$('#adel').onclick = async () => {
+  $('#act').close();
+  if (!actPost || !confirm('এই পোস্ট ডিলেট করবেন?')) return;
+  try { await api('/channels/' + cur.id + '/posts/' + actPost.id, { method: 'DELETE' }); pollPosts(true); } catch (e) { alert('হয়নি: ' + e.message); }
+};
+function showEImg() { $('#eimg').style.display = editImg ? 'block' : 'none'; $('#erm').style.display = editImg ? 'inline-block' : 'none'; if (editImg) $('#eimg').src = editImg; }
+$('#aedit').onclick = () => { $('#act').close(); editPost = actPost; editImg = actPost.img || null; $('#etxt').value = actPost.text || ''; showEImg(); $('#pdlg').showModal(); };
+$('#efile').onchange = async e => { const f = e.target.files[0]; if (!f) return; editImg = await readImg(f, 900, false, 0.7); showEImg(); };
+$('#erm').onclick = () => { editImg = null; showEImg(); };
+$('#ecancel').onclick = () => $('#pdlg').close();
+$('#esave').onclick = async () => {
+  try {
+    await api('/channels/' + cur.id + '/posts/' + editPost.id + '?updateMask.fieldPaths=text&updateMask.fieldPaths=img&updateMask.fieldPaths=e', { method: 'PATCH', body: JSON.stringify({ fields: { text: S($('#etxt').value.trim()), img: S(editImg || ''), e: { booleanValue: true } } }) });
+    $('#pdlg').close(); pollPosts(true);
+  } catch (e) { alert('হয়নি: ' + e.message); }
+};
+
+/* ---------- অ্যাডমিন লগইন ---------- */
+$('#gear').onclick = () => {
+  $('#abody').innerHTML = isAdmin
+    ? '<h3>অ্যাডমিন</h3><p class="mute">আপনি অ্যাডমিন হিসেবে লগইন আছেন।</p><div class="row"><button class="btn out" id="aclose">বন্ধ</button><button class="btn red" id="alogout">লগআউট</button></div>'
+    : '<h3>অ্যাডমিন লগইন</h3><input id="aem" type="email" placeholder="ইমেইল" autocomplete="username"><input id="apw" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password"><p id="aerr" style="color:#d64545;margin:0 0 8px"></p><div class="row"><button class="btn out" id="aclose">বাতিল</button><button class="btn" id="alogin">লগইন</button></div>';
+  $('#aclose').onclick = () => $('#adlg').close();
+  if ($('#alogout')) $('#alogout').onclick = () => { ls.set('auth', null); $('#adlg').close(); cur = null; clearInterval(postTimer); boot(); };
+  if ($('#alogin')) $('#alogin').onclick = async () => {
+    try {
+      const j = await http('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('#aem').value.trim(), password: $('#apw').value, returnSecureToken: true }) });
+      setAuth(j.localId, j.idToken, j.refreshToken, j.expiresIn);
+      $('#adlg').close(); cur = null; clearInterval(postTimer); await loadUser(); await loadChannels(); render();
+    } catch (e) { $('#aerr').textContent = 'লগইন হয়নি: ' + e.message; }
+  };
+  $('#adlg').showModal();
+};
+
+checkGate();
 </script>
 </body>
 </html>
