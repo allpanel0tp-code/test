@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<title>My App</title>
+</head>
+<body>
+<button onclick="notify()">নোটিফিকেশন টেস্ট</button>
+<p id="s"></p>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+async function notify() {
+  const s = document.getElementById('s');
+  const p = await Notification.requestPermission();
+  s.textContent = 'Permission: ' + p;
+  if (p !== 'granted') return;
+  const reg = await navigator.serviceWorker.ready;
+  setTimeout(() => reg.showNotification('হ্যালো', { body: 'টেস্ট সফল!' }), 5000);
+}
+</script>
+</body>
+</html>
