@@ -49,7 +49,7 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:10px;border:1p
 <body>
 <header><button id="back" style="display:none">←</button><h1 id="title">চ্যানেল</h1><button id="mine" style="display:none" title="চ্যানেল ছাড়ুন"></button></header>
 <div id="notifbar"><span>নতুন পোস্টের নোটিফিকেশন চান?</span><button class="btn" id="allow">চালু করুন</button></div>
-<main id="main"><p class="empty">লোড হচ্ছে… (সংস্করণ ৭)</p></main>
+<main id="main"><p class="empty">লোড হচ্ছে… (সংস্করণ ৮)</p></main>
 <div id="prev"><img id="pimg" alt=""></div>
 <div class="comp" id="comp" style="display:none">
   <label for="file">📷</label><input type="file" id="file" accept="image/*" hidden>
@@ -65,89 +65,115 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:10px;border:1p
   <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn out" id="cancel">বাতিল</button><button class="btn" id="make">তৈরি করুন</button></div>
 </dialog>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, doc, collection, query, orderBy, limit, getDocFromServer, getDocsFromServer, onSnapshot, addDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBcIndoIA5ZAyA-7ykefcyFM8kPqOcQfL4",
-  authDomain: "test-efd19.firebaseapp.com",
-  projectId: "test-efd19",
-  storageBucket: "test-efd19.firebasestorage.app",
-  messagingSenderId: "891360464045",
-  appId: "1:891360464045:web:e6403dccbdc3bdb6df4a24"
-};
+<script>
+const KEY = "AIzaSyBcIndoIA5ZAyA-7ykefcyFM8kPqOcQfL4", PROJ = "test-efd19";
+const ROOT = 'projects/' + PROJ + '/databases/(default)/documents';
+const DB = 'https://firestore.googleapis.com/v1/' + ROOT;
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-const app = initializeApp(firebaseConfig);
-const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
-const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
-let step = 'লগইন (Authentication)';
 
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const showErr = e => { if (!cur) $('#main').innerHTML = '<p class="empty">ডেটা লোড হয়নি: ' + esc(e.message) + '</p>'; };
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
-let ready = false, uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
-const watchers = {};
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+let uid, token, exp = 0, joined = [], tab = 'all', cur = null, chans = [], imgData = null, ready = false, postSig = null, postTimer = null;
 
-setTimeout(async () => {
-  if (ready || cur) return;
-  const chk = async (name, url) => { try { await fetch(url, { mode: 'no-cors' }); return name + ': পৌঁছানো যাচ্ছে'; } catch (e) { return name + ': ব্লক/অনুপলব্ধ'; } };
-  const r = [await chk('Auth সার্ভার', 'https://identitytoolkit.googleapis.com/'), await chk('Firestore সার্ভার', 'https://firestore.googleapis.com/')];
-  if (!ready && !cur) $('#main').innerHTML = '<p class="empty">১০ সেকেন্ডেও লোড হয়নি। (সংস্করণ ৭, মডিউল)<br>আটকে আছে: <b>' + step + '</b><br><br>' + r.join('<br>') + '<br><br><button class="btn" onclick="location.reload()">আবার চেষ্টা করুন</button></p>';
-}, 10000);
+async function http(url, opt = {}, ms = 12000) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try {
+    const r = await fetch(url, { ...opt, signal: c.signal });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error((j.error && j.error.message) || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+    return j;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('সময় শেষ: সার্ভার সাড়া দিচ্ছে না');
+    throw e;
+  } finally { clearTimeout(t); }
+}
 
-signInAnonymously(auth).then(u => { uid = u.user.uid; step = 'ডেটাবেস (Firestore)'; start(); }).catch(e => {
-  $('#main').innerHTML = '<p class="empty">লগইন হয়নি (' + esc(e.code || '') + '): ' + esc(e.message) + '</p>';
-});
+function setAuth(id, tok, ref, secs) { uid = id; token = tok; exp = Date.now() + (+secs - 60) * 1000; ls.set('auth', { uid: id, ref }); }
+
+async function refresh() {
+  const a = ls.get('auth');
+  if (a && a.ref) {
+    try {
+      const j = await http('https://securetoken.googleapis.com/v1/token?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(a.ref) });
+      setAuth(j.user_id, j.id_token, j.refresh_token, j.expires_in);
+      return;
+    } catch (e) {}
+  }
+  const j = await http('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) });
+  setAuth(j.localId, j.idToken, j.refreshToken, j.expiresIn);
+}
+
+async function api(path, opt = {}) {
+  if (!token || Date.now() > exp) await refresh();
+  const url = DB + path;
+  const o = { ...opt, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
+  try { return await http(url, o); }
+  catch (e) { if (e.status === 401) { await refresh(); o.headers.Authorization = 'Bearer ' + token; return http(url, o); } throw e; }
+}
+
+const S = v => ({ stringValue: String(v) });
+function parse(doc) {
+  const o = { id: doc.name.split('/').pop() };
+  for (const k in (doc.fields || {})) {
+    const v = doc.fields[k];
+    o[k] = 'stringValue' in v ? v.stringValue : 'integerValue' in v ? +v.integerValue : 'timestampValue' in v ? new Date(v.timestampValue) : 'arrayValue' in v ? (v.arrayValue.values || []).map(x => x.stringValue) : null;
+  }
+  return o;
+}
+async function query(parent, q) {
+  const r = await api(parent + ':runQuery', { method: 'POST', body: JSON.stringify({ structuredQuery: q }) });
+  return r.filter(x => x.document).map(x => parse(x.document));
+}
+const byTime = (col, n) => ({ from: [{ collectionId: col }], orderBy: [{ field: { fieldPath: 't' }, direction: 'DESCENDING' }], limit: n });
+
+function fail(e) {
+  $('#main').innerHTML = '<p class="empty">সংযোগ হয়নি: ' + esc(e.message) + '<br><br><button class="btn" id="retry">আবার চেষ্টা করুন</button></p>';
+  $('#retry').onclick = boot;
+}
 
 async function loadChannels() {
   try {
-    const u = await getDocFromServer(doc(db, 'users', uid));
-    joined = new Set((u.data() || {}).joined || []);
-    joined.forEach(watch);
-    const c = await getDocsFromServer(query(collection(db, 'channels'), orderBy('t', 'desc'), limit(100)));
-    chans = c.docs.map(d => ({ id: d.id, ...d.data() }));
+    try { joined = parse(await api('/users/' + uid)).joined || []; } catch (e) { if (e.status !== 404) throw e; joined = []; }
+    chans = await query('', byTime('channels', 100));
     ready = true;
-    render();
-  } catch (e) {
-    if (!cur && !ready) $('#main').innerHTML = '<p class="empty">সার্ভারে সংযোগ হয়নি (' + esc(e.code || '') + '): ' + esc(e.message) + '<br><br><button class="btn" onclick="loadChannels()">আবার চেষ্টা করুন</button></p>';
-  }
+    if (!cur) render();
+  } catch (e) { if (!ready) fail(e); }
 }
-window.loadChannels = loadChannels;
 
-function start() {
+async function boot() {
+  $('#main').innerHTML = '<p class="empty">লোড হচ্ছে… (সংস্করণ ৮)</p>';
+  try { await refresh(); } catch (e) { fail(e); return; }
   loadChannels();
-  setInterval(() => { if (!cur) loadChannels(); }, 15000);
-  if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
 }
-
-$('#allow').onclick = async () => {
-  await Notification.requestPermission();
-  $('#notifbar').style.display = 'none';
-};
-
-function watch(id) {
-  if (watchers[id]) return;
-  let first = true;
-  watchers[id] = onSnapshot(query(collection(db, 'channels', id, 'posts'), orderBy('t', 'desc'), limit(1)), s => {
-    if (first) { first = false; return; }
-    if (s.metadata.hasPendingWrites) return;
-    s.docChanges().forEach(ch => {
-      const p = ch.doc.data();
-      if (ch.type !== 'added' || p.by === uid) return;
-      if (cur && cur.id === id && !document.hidden) return;
-      const c = chans.find(x => x.id === id);
-      notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি');
-    });
-  });
-}
+boot();
+setInterval(() => { if (!cur && ready) loadChannels(); }, 15000);
+setInterval(checkNew, 20000);
+if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
+$('#allow').onclick = async () => { await Notification.requestPermission(); $('#notifbar').style.display = 'none'; };
 
 async function notify(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const reg = await navigator.serviceWorker.ready;
   reg.showNotification(title, { body, icon: 'launchericon-192x192.png' });
+}
+
+async function checkNew() {
+  if (!ready) return;
+  const seen = ls.get('seen') || {};
+  for (const id of joined.slice(0, 10)) {
+    try {
+      const p = (await query('/channels/' + id, byTime('posts', 1)))[0];
+      if (!(id in seen)) { seen[id] = p ? p.id : ''; continue; }
+      if (p && seen[id] !== p.id) {
+        seen[id] = p.id;
+        const viewing = cur && cur.id === id && !document.hidden;
+        if (p.by !== uid && !viewing) { const c = chans.find(x => x.id === id); notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি'); }
+      }
+    } catch (e) {}
+  }
+  ls.set('seen', seen);
 }
 
 function render() {
@@ -157,14 +183,14 @@ function render() {
   $('#mine').style.display = 'none';
   $('#fab').style.display = 'block';
   $('#comp').style.display = 'none';
-  const list = chans.filter(c => tab === 'all' || joined.has(c.id));
+  const list = chans.filter(c => tab === 'all' || joined.includes(c.id));
   $('#main').innerHTML =
     '<div class="tabs"><button data-t="all" class="' + (tab === 'all' ? 'on' : '') + '">সব চ্যানেল</button>' +
     '<button data-t="my" class="' + (tab === 'my' ? 'on' : '') + '">আমার চ্যানেল</button></div>' +
     (list.length ? list.map(c =>
       '<div class="ch" data-id="' + c.id + '"><div class="av">' + esc((c.name || '#')[0]) + '</div>' +
       '<div class="t"><b>' + esc(c.name) + '</b><small>' + (c.count || 0) + ' সদস্য' + (c.desc ? ' – ' + esc(c.desc) : '') + '</small></div>' +
-      '<button class="btn ' + (joined.has(c.id) ? 'out' : '') + '" data-j="' + c.id + '">' + (joined.has(c.id) ? 'জয়েন করা' : 'জয়েন') + '</button></div>'
+      '<button class="btn ' + (joined.includes(c.id) ? 'out' : '') + '" data-j="' + c.id + '">' + (joined.includes(c.id) ? 'জয়েন করা' : 'জয়েন') + '</button></div>'
     ).join('') : '<p class="empty">' + (tab === 'my' ? 'এখনো কোনো চ্যানেলে জয়েন করেননি।' : 'কোনো চ্যানেল নেই। + চেপে প্রথমটি বানান।') + '</p>');
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
   document.querySelectorAll('.ch').forEach(el => el.onclick = e => {
@@ -173,43 +199,66 @@ function render() {
   });
 }
 
+async function saveJoined() {
+  await api('/users/' + uid + '?updateMask.fieldPaths=joined', { method: 'PATCH', body: JSON.stringify({ fields: { joined: { arrayValue: { values: joined.map(S) } } } }) });
+}
+
 async function toggle(id) {
-  const on = joined.has(id);
+  const on = joined.includes(id);
   try {
-    await setDoc(doc(db, 'users', uid), { joined: on ? arrayRemove(id) : arrayUnion(id) }, { merge: true });
-    await updateDoc(doc(db, 'channels', id), { count: increment(on ? -1 : 1) });
+    joined = on ? joined.filter(x => x !== id) : [...joined, id];
+    render();
+    await saveJoined();
+    await api(':commit', { method: 'POST', body: JSON.stringify({ writes: [{ transform: { document: ROOT + '/channels/' + id, fieldTransforms: [{ fieldPath: 'count', increment: { integerValue: on ? '-1' : '1' } }] } }] }) });
     loadChannels();
-  } catch (e) { alert('হয়নি: ' + e.message); }
+  } catch (e) { alert('হয়নি: ' + e.message); loadChannels(); }
+}
+
+function renderPosts(ps) {
+  $('#main').innerHTML = ps.length ? ps.map(p =>
+    '<div class="post">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') + (p.text ? '<p>' + linkify(p.text) + '</p>' : '') +
+    '<time>' + (p.t ? p.t.toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</time></div>').join('')
+    : '<p class="empty">এখনো কোনো পোস্ট নেই।</p>';
+}
+
+async function pollPosts() {
+  if (!cur) return;
+  const id = cur.id;
+  try {
+    const ps = await query('/channels/' + id, byTime('posts', 60));
+    if (!cur || cur.id !== id) return;
+    const sig = ps.map(p => p.id).join(',');
+    if (sig !== postSig) {
+      postSig = sig; renderPosts(ps);
+      const seen = ls.get('seen') || {}; seen[id] = ps[0] ? ps[0].id : ''; ls.set('seen', seen);
+    }
+  } catch (e) { if (postSig === null) $('#main').innerHTML = '<p class="empty">পোস্ট লোড হয়নি: ' + esc(e.message) + '</p>'; }
 }
 
 function open(id) {
   cur = chans.find(c => c.id === id);
   if (!cur) return;
+  postSig = null;
   $('#title').textContent = cur.name;
   $('#back').style.display = 'block';
   $('#fab').style.display = 'none';
   $('#comp').style.display = cur.owner === uid ? 'flex' : 'none';
   $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
-  if (unPosts) unPosts();
-  unPosts = onSnapshot(query(collection(db, 'channels', id, 'posts'), orderBy('t', 'desc'), limit(60)), s => {
-    $('#main').innerHTML = s.empty ? '<p class="empty">এখনো কোনো পোস্ট নেই।</p>' : s.docs.map(d => {
-      const p = d.data(), t = p.t ? p.t.toDate().toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '';
-      return '<div class="post">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
-        (p.text ? '<p>' + linkify(p.text) + '</p>' : '') + '<time>' + t + '</time></div>';
-    }).join('');
-  }, e => { $('#main').innerHTML = '<p class="empty">পোস্ট লোড হয়নি: ' + esc(e.message) + '</p>'; });
+  pollPosts();
+  clearInterval(postTimer);
+  postTimer = setInterval(pollPosts, 5000);
 }
 
-$('#back').onclick = () => { if (unPosts) unPosts(); unPosts = null; cur = null; clearImg(); render(); };
-
+$('#back').onclick = () => { clearInterval(postTimer); cur = null; clearImg(); render(); };
 $('#fab').onclick = () => $('#dlg').showModal();
 $('#cancel').onclick = () => $('#dlg').close();
 $('#make').onclick = async () => {
   const name = $('#cname').value.trim();
   if (!name) return;
   try {
-    const ref = await addDoc(collection(db, 'channels'), { name, desc: $('#cdesc').value.trim(), owner: uid, count: 1, t: serverTimestamp() });
-    await setDoc(doc(db, 'users', uid), { joined: arrayUnion(ref.id) }, { merge: true });
+    const d = await api('/channels', { method: 'POST', body: JSON.stringify({ fields: { name: S(name), desc: S($('#cdesc').value.trim()), owner: S(uid), count: { integerValue: '1' }, t: { timestampValue: new Date().toISOString() } } }) });
+    joined = [...joined, d.name.split('/').pop()];
+    await saveJoined();
     $('#cname').value = ''; $('#cdesc').value = '';
     $('#dlg').close();
     loadChannels();
@@ -217,7 +266,6 @@ $('#make').onclick = async () => {
 };
 
 function clearImg() { imgData = null; $('#prev').style.display = 'none'; $('#file').value = ''; }
-
 $('#file').onchange = e => {
   const f = e.target.files[0];
   if (!f) return;
@@ -237,8 +285,9 @@ $('#send').onclick = async () => {
   if (!text && !imgData) return;
   $('#send').disabled = true;
   try {
-    await addDoc(collection(db, 'channels', cur.id, 'posts'), { text, img: imgData || '', by: uid, t: serverTimestamp() });
+    await api('/channels/' + cur.id + '/posts', { method: 'POST', body: JSON.stringify({ fields: { text: S(text), img: S(imgData || ''), by: S(uid), t: { timestampValue: new Date().toISOString() } } }) });
     $('#txt').value = ''; clearImg();
+    pollPosts();
   } catch (e) { alert('পোস্ট হয়নি: ' + e.message); }
   $('#send').disabled = false;
 };
