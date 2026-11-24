@@ -116,6 +116,15 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:11px;border:1p
   <div class="row"><button class="btn out" id="ecancel">বাতিল</button><button class="btn" id="esave">সংরক্ষণ</button></div>
 </dialog>
 
+<dialog id="ndlg">
+  <h3>📲 ফোন বন্ধ থাকলেও নোটিফিকেশন</h3>
+  <p class="idesc">স্ক্রিন বা অ্যাপ বন্ধ থাকলেও নতুন পোস্টের খবর পেতে বিনামূল্যের <b>ntfy</b> অ্যাপ লাগবে।<br>১) আগে অ্যাপটি ইনস্টল করুন (একবারই)।<br>২) তারপর নিচের দ্বিতীয় বাটন চেপে এই চ্যানেলে সাবস্ক্রাইব করুন।</p>
+  <div class="col">
+    <a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">১) ntfy ইনস্টল করুন</a>
+    <a class="btn" id="nsub" style="text-align:center;text-decoration:none" href="#">২) এই চ্যানেলে সাবস্ক্রাইব করুন</a>
+    <button class="btn out" id="nclose">বন্ধ</button>
+  </div>
+</dialog>
 <dialog id="adlg"><div id="abody"></div></dialog>
 <dialog id="lb"><img id="lbimg" alt=""><div class="row" style="margin-top:10px"><button class="btn" id="lbclose">বন্ধ</button></div></dialog>
 <script>
@@ -224,7 +233,7 @@ async function notify(title, body) {
 }
 async function checkNew() {
   if (!ready) return;
-  const seen = ls.get('seen') || {};
+  const seen = ls.get('seen') || {}, nt = ls.get('ntfy') || {};
   for (const id of joined.slice(0, 10)) {
     try {
       const p = (await query('/channels/' + id, byTime('posts', 1)))[0];
@@ -232,7 +241,7 @@ async function checkNew() {
       if (p && seen[id] !== p.id) {
         seen[id] = p.id;
         const viewing = cur && cur.id === id && !document.hidden;
-        if (p.by !== uid && !viewing) { const c = chans.find(x => x.id === id); notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি'); }
+        if (p.by !== uid && !viewing && !nt[id]) { const c = chans.find(x => x.id === id); notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি'); }
       }
     } catch (e) {}
   }
@@ -252,9 +261,33 @@ async function boot() {
   $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
   try { await refresh(); await loadUser(); } catch (e) { fail(e); return; }
   await loadChannels();
+  checkNew();
 }
 setInterval(() => { if (ready && !cur) loadChannels(); }, 15000);
-setInterval(checkNew, 20000);
+setInterval(checkNew, 15000);
+
+/* ---------- ফোন বন্ধ থাকলে নোটিফিকেশন (ntfy) ---------- */
+const NTFY = 'https://ntfy.sh';
+const rnd = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+async function ensureTopic(c) {
+  if (c.topic) return c.topic;
+  const t = 'chn-' + rnd(18);
+  await api('/channels/' + c.id + '?updateMask.fieldPaths=topic', { method: 'PATCH', body: JSON.stringify({ fields: { topic: S(t) } }) });
+  c.topic = t; return t;
+}
+async function pushNtfy(c, msg) {
+  try {
+    const t = await ensureTopic(c);
+    await fetch(NTFY + '/', { method: 'POST', mode: 'no-cors', body: JSON.stringify({ topic: t, title: c.name, message: msg, click: location.href.split('#')[0].split('?')[0] }) });
+  } catch (e) {}
+}
+function showNtfy(c, quiet) {
+  if (!c || !c.topic) { if (!quiet) alert('এই চ্যানেলের ফোন-বন্ধ নোটিফিকেশন এখনো চালু হয়নি। অ্যাডমিন একবার চ্যানেলটি খুললে চালু হবে।'); return; }
+  $('#nsub').href = 'ntfy://ntfy.sh/' + c.topic + '?display=' + encodeURIComponent(c.name);
+  $('#nsub').onclick = () => { const o = ls.get('ntfy') || {}; o[c.id] = 1; ls.set('ntfy', o); };
+  $('#ndlg').showModal();
+}
+$('#nclose').onclick = () => $('#ndlg').close();
 
 /* ---------- ছবি ---------- */
 function readImg(file, max, square, q) {
@@ -304,7 +337,7 @@ async function toggle(id) {
   joined = on ? joined.filter(x => x !== id) : [...joined, id];
   const c = chans.find(x => x.id === id); if (c) c.count = Math.max(0, (c.count || 0) + (on ? -1 : 1));
   cur ? head() : render();
-  try { await saveUser(); await commit('/channels/' + id, [inc('count', on ? -1 : 1)]); loadChannels(); }
+  try { await saveUser(); await commit('/channels/' + id, [inc('count', on ? -1 : 1)]); loadChannels(); checkNew(); if (!on && !isAdmin) showNtfy(chans.find(x => x.id === id), true); }
   catch (e) { alert('হয়নি: ' + e.message); await loadUser(); loadChannels(); }
 }
 
@@ -338,6 +371,7 @@ function openCh(id) {
   cur = chans.find(c => c.id === id);
   if (!cur) return;
   postSig = null; posts = [];
+  if (isAdmin && !cur.topic) ensureTopic(cur).catch(() => {});
   head();
   $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
   pollPosts();
@@ -378,7 +412,8 @@ $('#hmid').onclick = () => { if (cur) showInfo(); };
 function showInfo() {
   const c = cur, on = joined.includes(c.id);
   $('#ibody').innerHTML = '<div class="ibig">' + av(c, 96) + '</div><h3 style="text-align:center;margin:0">' + esc(c.name) + '</h3><div class="mute" style="text-align:center">' + (c.count || 0) + ' সদস্য</div><p class="idesc">' + (c.desc ? linkify(c.desc) : '<span class="mute">কোনো বিবরণ নেই</span>') + '</p>';
-  $('#ibtn').innerHTML = (isAdmin ? '<button class="btn" id="ied">✏️ চ্যানেল এডিট</button><button class="btn red" id="idel">🗑 চ্যানেল ডিলেট</button>' : '<button class="btn ' + (on ? 'out' : '') + '" id="ijoin">' + (on ? 'চ্যানেল ছাড়ুন' : 'জয়েন করুন') + '</button>') + '<button class="btn out" id="iclose">বন্ধ</button>';
+  $('#ibtn').innerHTML = (isAdmin ? '<button class="btn" id="ied">✏️ চ্যানেল এডিট</button><button class="btn red" id="idel">🗑 চ্যানেল ডিলেট</button>' : '<button class="btn ' + (on ? 'out' : '') + '" id="ijoin">' + (on ? 'চ্যানেল ছাড়ুন' : 'জয়েন করুন') + '</button>' + (on ? '<button class="btn" id="intf">📲 ফোন বন্ধে নোটিফিকেশন (ntfy)</button>' : '')) + '<button class="btn out" id="iclose">বন্ধ</button>';
+  if ($('#intf')) $('#intf').onclick = () => { $('#idlg').close(); showNtfy(c); };
   $('#iclose').onclick = () => $('#idlg').close();
   if ($('#ijoin')) $('#ijoin').onclick = () => { $('#idlg').close(); toggle(c.id); };
   if ($('#ied')) $('#ied').onclick = () => { $('#idlg').close(); openChDlg(c); };
@@ -411,7 +446,7 @@ $('#csave').onclick = async () => {
     if (editCh) {
       await api('/channels/' + editCh.id + '?updateMask.fieldPaths=name&updateMask.fieldPaths=desc&updateMask.fieldPaths=logo', { method: 'PATCH', body: JSON.stringify({ fields: { name: S(name), desc: S(desc), logo: S(logoData || '') } }) });
     } else {
-      await api('/channels', { method: 'POST', body: JSON.stringify({ fields: { name: S(name), desc: S(desc), logo: S(logoData || ''), count: I(0), t: { timestampValue: new Date().toISOString() } } }) });
+      await api('/channels', { method: 'POST', body: JSON.stringify({ fields: { name: S(name), desc: S(desc), logo: S(logoData || ''), topic: S('chn-' + rnd(18)), count: I(0), t: { timestampValue: new Date().toISOString() } } }) });
     }
     $('#cdlg').close(); loadChannels();
   } catch (e) { alert('হয়নি: ' + e.message); }
@@ -431,6 +466,7 @@ $('#send').onclick = async () => {
     await api('/channels/' + cur.id + '/posts', { method: 'POST', body: JSON.stringify({ fields: { text: S(text), img: S(imgData || ''), by: S(uid), e: { booleanValue: false }, t: { timestampValue: new Date().toISOString() }, r0: I(0), r1: I(0), r2: I(0), r3: I(0), r4: I(0) } }) });
     $('#txt').value = ''; imgData = null; $('#file').value = ''; $('#prev').style.display = 'none';
     pollPosts(true);
+    await pushNtfy(cur, text ? text.slice(0, 200) : '📷 নতুন ছবি');
   } catch (e) { alert('পোস্ট হয়নি: ' + e.message); }
   $('#send').disabled = false;
 };
