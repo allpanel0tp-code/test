@@ -72,6 +72,8 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:11px;border:1p
 #lbimg{width:100%;border-radius:12px}
 .lblogo{width:96px;height:96px;margin:0 auto 10px;display:block}
 </style>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 </head>
 <body>
 <header>
@@ -129,6 +131,8 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:11px;border:1p
 <dialog id="lb"><img id="lbimg" alt=""><div class="row" style="margin-top:10px"><button class="btn" id="lbclose">বন্ধ</button></div></dialog>
 <script>
 const KEY = "AIzaSyAWlFQaU4bddS-oe7GQMNJ2OIkyzG4EJa8", PROJ = "test09-85e48";
+const VAPID_KEY = "BNTjWPuA2tRksat7UVACdtxozh8XMEVIW0mUOv88AeLbcx0-M9vqVAoE0d9bkudjznHRYMTwm0BJBgoamzJ4aQI", WORKER_URL = "https://channel-push.allpanel0tp.workers.dev/";
+const SENDER_ID = "60904630784", APP_ID = "1:60904630784:web:ce6a72d3bb91e14aa806e5";
 const ROOT = 'projects/' + PROJ + '/databases/(default)/documents';
 const DB = 'https://firestore.googleapis.com/v1/' + ROOT;
 const EMO = ['👍', '❤️', '🔥', '😂', '👏'];
@@ -139,7 +143,7 @@ const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
 const fmt = d => d ? d.toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-let uid, token, exp = 0, isAdmin = false, joined = [], rx = {}, tab = 'all', cur = null, chans = [], posts = [], ready = false, postSig = null, postTimer = null;
+let provider = '', email = '', uid, token, exp = 0, isAdmin = false, joined = [], rx = {}, tab = 'all', cur = null, chans = [], posts = [], ready = false, postSig = null, postTimer = null;
 let imgData = null, editPost = null, editCh = null, logoData = null, editImg = null, actPost = null, started = false;
 
 /* ---------- নেটওয়ার্ক ও লগইন ---------- */
@@ -158,7 +162,7 @@ async function http(url, opt = {}, ms = 12000) {
 }
 function setAuth(id, tok, ref, secs) {
   uid = id; token = tok; exp = Date.now() + (+secs - 60) * 1000;
-  try { const p = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); isAdmin = !!(p.firebase && p.firebase.sign_in_provider === 'password'); } catch (e) { isAdmin = false; }
+  try { const p = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); provider = (p.firebase && p.firebase.sign_in_provider) || ''; email = (p.email || '').toLowerCase(); isAdmin = provider === 'password'; } catch (e) { isAdmin = false; }
   ls.set('auth', { uid: id, ref });
 }
 async function refresh() {
@@ -226,10 +230,10 @@ $('#gbtn').onclick = async () => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !started) checkGate(); });
 
-async function notify(title, body) {
+async function notify(title, body, tag) {
   if (!canNotif || Notification.permission !== 'granted') return;
   const reg = await navigator.serviceWorker.ready;
-  reg.showNotification(title, { body, icon: 'launchericon-192x192.png', badge: 'launchericon-96x96.png' });
+  reg.showNotification(title, { body, icon: 'launchericon-192x192.png', badge: 'launchericon-96x96.png', tag: tag || 'post' });
 }
 async function checkNew() {
   if (!ready) return;
@@ -241,7 +245,7 @@ async function checkNew() {
       if (p && seen[id] !== p.id) {
         seen[id] = p.id;
         const viewing = cur && cur.id === id && !document.hidden;
-        if (p.by !== uid && !viewing && !nt[id]) { const c = chans.find(x => x.id === id); notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি'); }
+        if (p.by !== uid && !viewing && !nt[id]) { const c = chans.find(x => x.id === id); notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি', id); }
       }
     } catch (e) {}
   }
@@ -262,6 +266,7 @@ async function boot() {
   try { await refresh(); await loadUser(); } catch (e) { fail(e); return; }
   await loadChannels();
   checkNew();
+  setupPush();
 }
 setInterval(() => { if (ready && !cur) loadChannels(); }, 15000);
 setInterval(checkNew, 15000);
@@ -288,6 +293,33 @@ function showNtfy(c, quiet) {
   $('#ndlg').showModal();
 }
 $('#nclose').onclick = () => $('#ndlg').close();
+
+/* ---------- অ্যাপ বন্ধ থাকলেও পুশ (FCM + Cloudflare Worker) ---------- */
+async function setupPush() {
+  try {
+    if (!window.firebase || !firebase.messaging || VAPID_KEY.startsWith('PASTE')) return;
+    if (!firebase.apps.length) firebase.initializeApp({ apiKey: KEY, projectId: PROJ, messagingSenderId: SENDER_ID, appId: APP_ID });
+    const reg = await navigator.serviceWorker.ready;
+    const tok = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (tok && ls.get('fcm2') !== uid + ':' + tok) {
+      await api('/users/' + uid + '?updateMask.fieldPaths=fcm', { method: 'PATCH', body: JSON.stringify({ fields: { fcm: S(tok) } }) });
+      ls.set('fcm2', uid + ':' + tok);
+    }
+  } catch (e) { console.log('push setup', e); }
+}
+async function pushServer(c, msg) {
+  if (WORKER_URL.startsWith('PASTE')) return;
+  try {
+    if (!token || Date.now() > exp) await refresh();
+    let off = 0;
+    for (let i = 0; i < 100; i++) {
+      const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ token, channelId: c.id, title: c.name, body: msg, url: location.href.split('#')[0].split('?')[0], offset: off }) });
+      const j = await r.json();
+      if (j.next == null) break;
+      off = j.next;
+    }
+  } catch (e) {}
+}
 
 /* ---------- ছবি ---------- */
 function readImg(file, max, square, q) {
@@ -466,7 +498,8 @@ $('#send').onclick = async () => {
     await api('/channels/' + cur.id + '/posts', { method: 'POST', body: JSON.stringify({ fields: { text: S(text), img: S(imgData || ''), by: S(uid), e: { booleanValue: false }, t: { timestampValue: new Date().toISOString() }, r0: I(0), r1: I(0), r2: I(0), r3: I(0), r4: I(0) } }) });
     $('#txt').value = ''; imgData = null; $('#file').value = ''; $('#prev').style.display = 'none';
     pollPosts(true);
-    await pushNtfy(cur, text ? text.slice(0, 200) : '📷 নতুন ছবি');
+    const msg = text ? text.slice(0, 200) : '📷 নতুন ছবি';
+    await Promise.all([pushNtfy(cur, msg), pushServer(cur, msg)]);
   } catch (e) { alert('পোস্ট হয়নি: ' + e.message); }
   $('#send').disabled = false;
 };
@@ -489,12 +522,16 @@ $('#esave').onclick = async () => {
 };
 
 /* ---------- অ্যাডমিন লগইন ---------- */
+async function init() {
+  try { await refresh(); } catch (e) { fail(e); return; }
+  checkGate();
+}
 $('#gear').onclick = () => {
   $('#abody').innerHTML = isAdmin
     ? '<h3>অ্যাডমিন</h3><p class="mute">আপনি অ্যাডমিন হিসেবে লগইন আছেন।</p><div class="row"><button class="btn out" id="aclose">বন্ধ</button><button class="btn red" id="alogout">লগআউট</button></div>'
     : '<h3>অ্যাডমিন লগইন</h3><input id="aem" type="email" placeholder="ইমেইল" autocomplete="username"><input id="apw" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password"><p id="aerr" style="color:#d64545;margin:0 0 8px"></p><div class="row"><button class="btn out" id="aclose">বাতিল</button><button class="btn" id="alogin">লগইন</button></div>';
   $('#aclose').onclick = () => $('#adlg').close();
-  if ($('#alogout')) $('#alogout').onclick = () => { ls.set('auth', null); $('#adlg').close(); cur = null; clearInterval(postTimer); boot(); };
+  if ($('#alogout')) $('#alogout').onclick = () => { ls.set('auth', null); location.reload(); };
   if ($('#alogin')) $('#alogin').onclick = async () => {
     try {
       const j = await http('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('#aem').value.trim(), password: $('#apw').value, returnSecureToken: true }) });
@@ -505,7 +542,7 @@ $('#gear').onclick = () => {
   $('#adlg').showModal();
 };
 
-checkGate();
+init();
 </script>
 </body>
 </html>
