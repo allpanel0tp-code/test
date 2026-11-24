@@ -84,6 +84,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore(), FV = firebase.firestore.FieldValue;
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const showErr = e => { if (!cur) $('#main').innerHTML = '<p class="empty">ডেটা লোড হয়নি: ' + esc(e.message) + '</p>'; };
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
 let uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
 const watchers = {};
@@ -97,11 +98,11 @@ function start() {
     joined = new Set((s.data() || {}).joined || []);
     joined.forEach(watch);
     render();
-  });
+  }, showErr);
   db.collection('channels').orderBy('t', 'desc').limit(100).onSnapshot(s => {
     chans = s.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
-  });
+  }, showErr);
   if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
 }
 
