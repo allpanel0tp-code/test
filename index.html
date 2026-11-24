@@ -82,6 +82,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 const app = initializeApp(firebaseConfig);
 const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
 const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+let step = 'লগইন (Authentication)';
 
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -89,13 +90,12 @@ const showErr = e => { if (!cur) $('#main').innerHTML = '<p class="empty">ডে
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
 let ready = false, uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
 const watchers = {};
-let step = 'লগইন (Authentication)';
 
 setTimeout(async () => {
   if (ready || cur) return;
   const chk = async (name, url) => { try { await fetch(url, { mode: 'no-cors' }); return name + ': পৌঁছানো যাচ্ছে'; } catch (e) { return name + ': ব্লক/অনুপলব্ধ'; } };
   const r = [await chk('Auth সার্ভার', 'https://identitytoolkit.googleapis.com/'), await chk('Firestore সার্ভার', 'https://firestore.googleapis.com/')];
-  if (!ready && !cur) $('#main').innerHTML = '<p class="empty">১০ সেকেন্ডেও লোড হয়নি।<br>আটকে আছে: <b>' + step + '</b><br><br>' + r.join('<br>') + '<br><br><button class="btn" onclick="location.reload()">আবার চেষ্টা করুন</button></p>';
+  if (!ready && !cur) $('#main').innerHTML = '<p class="empty">১০ সেকেন্ডেও লোড হয়নি। (সংস্করণ ৭, মডিউল)<br>আটকে আছে: <b>' + step + '</b><br><br>' + r.join('<br>') + '<br><br><button class="btn" onclick="location.reload()">আবার চেষ্টা করুন</button></p>';
 }, 10000);
 
 signInAnonymously(auth).then(u => { uid = u.user.uid; step = 'ডেটাবেস (Firestore)'; start(); }).catch(e => {
