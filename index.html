@@ -49,7 +49,7 @@ dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:10px;border:1p
 <body>
 <header><button id="back" style="display:none">←</button><h1 id="title">চ্যানেল</h1><button id="mine" style="display:none" title="চ্যানেল ছাড়ুন"></button></header>
 <div id="notifbar"><span>নতুন পোস্টের নোটিফিকেশন চান?</span><button class="btn" id="allow">চালু করুন</button></div>
-<main id="main"></main>
+<main id="main"><p class="empty">লোড হচ্ছে…</p></main>
 <div id="prev"><img id="pimg" alt=""></div>
 <div class="comp" id="comp" style="display:none">
   <label for="file">📷</label><input type="file" id="file" accept="image/*" hidden>
@@ -82,11 +82,12 @@ const firebaseConfig = {
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore(), FV = firebase.firestore.FieldValue;
+db.settings({ experimentalAutoDetectLongPolling: true });
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const showErr = e => { if (!cur) $('#main').innerHTML = '<p class="empty">ডেটা লোড হয়নি: ' + esc(e.message) + '</p>'; };
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
-let uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
+let ready = false, uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
 const watchers = {};
 
 auth.signInAnonymously().then(u => { uid = u.user.uid; start(); }).catch(e => {
@@ -97,10 +98,12 @@ function start() {
   db.doc('users/' + uid).onSnapshot(s => {
     joined = new Set((s.data() || {}).joined || []);
     joined.forEach(watch);
-    render();
+    if (ready) render();
   }, showErr);
-  db.collection('channels').orderBy('t', 'desc').limit(100).onSnapshot(s => {
+  db.collection('channels').orderBy('t', 'desc').limit(100).onSnapshot({ includeMetadataChanges: true }, s => {
+    if (s.metadata.fromCache && s.empty) { if (!cur) $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>'; return; }
     chans = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    ready = true;
     render();
   }, showErr);
   if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
