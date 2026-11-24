@@ -1,25 +1,218 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f3d3e">
 <link rel="manifest" href="manifest.json">
-<title>My App</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<title>চ্যানেল</title>
+<style>
+:root{--bg:#eef2f1;--card:#fff;--ink:#14292a;--mute:#5d7273;--head:#0f3d3e;--acc:#f2a900;--line:#d5dfde;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1a1a;--card:#16282a;--ink:#e6efee;--mute:#8fa6a6;--head:#0a2a2b;--line:#27403f;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Hind Siliguri",system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{background:var(--head);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.15rem;margin:0;flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header button{background:none;border:0;color:#fff;font:inherit;font-size:1.3rem;padding:4px 8px}
+main{flex:1;overflow-y:auto;padding:12px 12px 90px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;padding:9px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#222}
+.ch{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:12px;margin-bottom:8px;border:1px solid var(--line)}
+.av{width:46px;height:46px;border-radius:50%;background:var(--head);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:1.2rem;flex:none}
+.ch .t{flex:1;min-width:0}
+.ch b{display:block}
+.ch small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{border:0;border-radius:18px;padding:7px 14px;font:inherit;font-weight:600;background:var(--acc);color:#222}
+.btn.out{background:none;border:1px solid var(--line);color:var(--ink)}
+.post{background:var(--card);border-radius:4px 16px 16px 16px;padding:8px;margin-bottom:10px;max-width:92%;border:1px solid var(--line)}
+.post img{width:100%;border-radius:10px;display:block;margin-bottom:6px}
+.post p{margin:4px 6px;white-space:pre-wrap;word-break:break-word}
+.post time{display:block;text-align:right;font-size:.72rem;color:var(--mute);margin:2px 6px}
+.fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:#222;font-size:1.8rem;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.comp{background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);display:flex;gap:8px;align-items:flex-end}
+.comp textarea{flex:1;border:1px solid var(--line);border-radius:14px;padding:9px 12px;font:inherit;background:var(--bg);color:var(--ink);resize:none;max-height:120px}
+.comp label{font-size:1.5rem;padding:4px 6px}
+#prev{display:none;padding:6px 10px;background:var(--card)}
+#prev img{height:70px;border-radius:8px}
+dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,380px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog input,dialog textarea{width:100%;margin:6px 0 12px;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg);color:var(--ink)}
+.empty{text-align:center;color:var(--mute);margin-top:40px}
+#notifbar{background:var(--acc);color:#222;padding:8px 12px;display:none;justify-content:space-between;align-items:center;font-size:.9rem}
+</style>
 </head>
 <body>
-<button onclick="notify()">নোটিফিকেশন টেস্ট</button>
-<p id="s"></p>
-<script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+<header><button id="back" style="display:none">←</button><h1 id="title">চ্যানেল</h1><button id="mine" style="display:none" title="চ্যানেল ছাড়ুন"></button></header>
+<div id="notifbar"><span>নতুন পোস্টের নোটিফিকেশন চান?</span><button class="btn" id="allow">চালু করুন</button></div>
+<main id="main"></main>
+<div id="prev"><img id="pimg" alt=""></div>
+<div class="comp" id="comp" style="display:none">
+  <label for="file">📷</label><input type="file" id="file" accept="image/*" hidden>
+  <textarea id="txt" rows="1" placeholder="নতুন পোস্ট লিখুন…"></textarea>
+  <button class="btn" id="send">পাঠান</button>
+</div>
+<button class="fab" id="fab">+</button>
 
-async function notify() {
-  const s = document.getElementById('s');
-  const p = await Notification.requestPermission();
-  s.textContent = 'Permission: ' + p;
-  if (p !== 'granted') return;
-  const reg = await navigator.serviceWorker.ready;
-  setTimeout(() => reg.showNotification('হ্যালো', { body: 'টেস্ট সফল!' }), 5000);
+<dialog id="dlg">
+  <b>নতুন চ্যানেল</b>
+  <input id="cname" placeholder="চ্যানেলের নাম" maxlength="40">
+  <textarea id="cdesc" rows="2" placeholder="বিবরণ (ঐচ্ছিক)" maxlength="120"></textarea>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn out" id="cancel">বাতিল</button><button class="btn" id="make">তৈরি করুন</button></div>
+</dialog>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ===== এখানে আপনার Firebase কনফিগ বসান =====
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
+};
+// =============================================
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.firestore(), FV = firebase.firestore.FieldValue;
+const $ = s => document.querySelector(s);
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
+const watchers = {};
+
+auth.signInAnonymously().then(u => { uid = u.user.uid; start(); }).catch(e => {
+  $('#main').innerHTML = '<p class="empty">সংযোগ হয়নি: ' + esc(e.message) + '</p>';
+});
+
+function start() {
+  db.doc('users/' + uid).onSnapshot(s => {
+    joined = new Set((s.data() || {}).joined || []);
+    joined.forEach(watch);
+    render();
+  });
+  db.collection('channels').orderBy('t', 'desc').limit(100).onSnapshot(s => {
+    chans = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
+  if ('Notification' in window && Notification.permission === 'default') $('#notifbar').style.display = 'flex';
 }
+
+$('#allow').onclick = async () => {
+  await Notification.requestPermission();
+  $('#notifbar').style.display = 'none';
+};
+
+function watch(id) {
+  if (watchers[id]) return;
+  let first = true;
+  watchers[id] = db.collection('channels/' + id + '/posts').orderBy('t', 'desc').limit(1).onSnapshot(s => {
+    if (first) { first = false; return; }
+    if (s.metadata.hasPendingWrites) return;
+    s.docChanges().forEach(ch => {
+      const p = ch.doc.data();
+      if (ch.type !== 'added' || p.by === uid) return;
+      if (cur && cur.id === id && !document.hidden) return;
+      const c = chans.find(x => x.id === id);
+      notify(c ? c.name : 'চ্যানেল', p.text || '📷 নতুন ছবি');
+    });
+  });
+}
+
+async function notify(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const reg = await navigator.serviceWorker.ready;
+  reg.showNotification(title, { body, icon: 'launchericon-192x192.png' });
+}
+
+function render() {
+  if (cur) return;
+  $('#title').textContent = 'চ্যানেল';
+  $('#back').style.display = 'none';
+  $('#mine').style.display = 'none';
+  $('#fab').style.display = 'block';
+  $('#comp').style.display = 'none';
+  const list = chans.filter(c => tab === 'all' || joined.has(c.id));
+  $('#main').innerHTML =
+    '<div class="tabs"><button data-t="all" class="' + (tab === 'all' ? 'on' : '') + '">সব চ্যানেল</button>' +
+    '<button data-t="my" class="' + (tab === 'my' ? 'on' : '') + '">আমার চ্যানেল</button></div>' +
+    (list.length ? list.map(c =>
+      '<div class="ch" data-id="' + c.id + '"><div class="av">' + esc(c.name[0] || '#') + '</div>' +
+      '<div class="t"><b>' + esc(c.name) + '</b><small>' + (c.count || 0) + ' সদস্য' + (c.desc ? ' – ' + esc(c.desc) : '') + '</small></div>' +
+      '<button class="btn ' + (joined.has(c.id) ? 'out' : '') + '" data-j="' + c.id + '">' + (joined.has(c.id) ? 'জয়েন করা' : 'জয়েন') + '</button></div>'
+    ).join('') : '<p class="empty">' + (tab === 'my' ? 'এখনো কোনো চ্যানেলে জয়েন করেননি।' : 'কোনো চ্যানেল নেই। + চেপে প্রথমটি বানান।') + '</p>');
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+  document.querySelectorAll('.ch').forEach(el => el.onclick = e => {
+    if (e.target.dataset.j) { toggle(e.target.dataset.j); return; }
+    open(el.dataset.id);
+  });
+}
+
+async function toggle(id) {
+  const on = joined.has(id);
+  await db.doc('users/' + uid).set({ joined: on ? FV.arrayRemove(id) : FV.arrayUnion(id) }, { merge: true });
+  await db.doc('channels/' + id).update({ count: FV.increment(on ? -1 : 1) });
+}
+
+function open(id) {
+  cur = chans.find(c => c.id === id);
+  if (!cur) return;
+  $('#title').textContent = cur.name;
+  $('#back').style.display = 'block';
+  $('#fab').style.display = 'none';
+  $('#comp').style.display = cur.owner === uid ? 'flex' : 'none';
+  $('#main').innerHTML = '<p class="empty">লোড হচ্ছে…</p>';
+  if (unPosts) unPosts();
+  unPosts = db.collection('channels/' + id + '/posts').orderBy('t', 'desc').limit(60).onSnapshot(s => {
+    $('#main').innerHTML = s.empty ? '<p class="empty">এখনো কোনো পোস্ট নেই।</p>' : s.docs.map(d => {
+      const p = d.data(), t = p.t ? p.t.toDate().toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+      return '<div class="post">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
+        (p.text ? '<p>' + esc(p.text) + '</p>' : '') + '<time>' + t + '</time></div>';
+    }).join('');
+  });
+}
+
+$('#back').onclick = () => { if (unPosts) unPosts(); unPosts = null; cur = null; clearImg(); render(); };
+
+$('#fab').onclick = () => $('#dlg').showModal();
+$('#cancel').onclick = () => $('#dlg').close();
+$('#make').onclick = async () => {
+  const name = $('#cname').value.trim();
+  if (!name) return;
+  const ref = await db.collection('channels').add({ name, desc: $('#cdesc').value.trim(), owner: uid, count: 1, t: FV.serverTimestamp() });
+  await db.doc('users/' + uid).set({ joined: FV.arrayUnion(ref.id) }, { merge: true });
+  $('#cname').value = ''; $('#cdesc').value = '';
+  $('#dlg').close();
+};
+
+function clearImg() { imgData = null; $('#prev').style.display = 'none'; $('#file').value = ''; }
+
+$('#file').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const im = new Image();
+  im.onload = () => {
+    const r = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+    c.width = im.width * r; c.height = im.height * r;
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+    imgData = c.toDataURL('image/jpeg', 0.7);
+    $('#pimg').src = imgData; $('#prev').style.display = 'block';
+  };
+  im.src = URL.createObjectURL(f);
+};
+
+$('#send').onclick = async () => {
+  const text = $('#txt').value.trim();
+  if (!text && !imgData) return;
+  $('#send').disabled = true;
+  try {
+    await db.collection('channels/' + cur.id + '/posts').add({ text, img: imgData || '', by: uid, t: FV.serverTimestamp() });
+    $('#txt').value = ''; clearImg();
+  } catch (e) { alert('পোস্ট হয়নি: ' + e.message); }
+  $('#send').disabled = false;
+};
 </script>
 </body>
 </html>
