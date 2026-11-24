@@ -30,6 +30,8 @@ main{flex:1;overflow-y:auto;padding:12px 12px 90px}
 .post{background:var(--card);border-radius:4px 16px 16px 16px;padding:8px;margin-bottom:10px;max-width:92%;border:1px solid var(--line)}
 .post img{width:100%;border-radius:10px;display:block;margin-bottom:6px}
 .post p{margin:4px 6px;white-space:pre-wrap;word-break:break-word}
+.post a{color:#1a73e8;word-break:break-all}
+@media(prefers-color-scheme:dark){.post a{color:#7fb2ff}}
 .post time{display:block;text-align:right;font-size:.72rem;color:var(--mute);margin:2px 6px}
 .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:#222;font-size:1.8rem;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .comp{background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);display:flex;gap:8px;align-items:flex-end}
@@ -82,6 +84,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore(), FV = firebase.firestore.FieldValue;
 const $ = s => document.querySelector(s);
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, u => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
 let uid, joined = new Set(), tab = 'all', cur = null, chans = [], unPosts = null, imgData = null;
 const watchers = {};
 
@@ -171,7 +174,7 @@ function open(id) {
     $('#main').innerHTML = s.empty ? '<p class="empty">এখনো কোনো পোস্ট নেই।</p>' : s.docs.map(d => {
       const p = d.data(), t = p.t ? p.t.toDate().toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : '';
       return '<div class="post">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
-        (p.text ? '<p>' + esc(p.text) + '</p>' : '') + '<time>' + t + '</time></div>';
+        (p.text ? '<p>' + linkify(p.text) + '</p>' : '') + '<time>' + t + '</time></div>';
     }).join('');
   });
 }
